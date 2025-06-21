@@ -58,16 +58,22 @@
           </div>
         </div>
       </section>
+
+      <!-- TSX 组件示例 -->
+      <section class="mb-8">
+        <TsxDemo />
+      </section>
     </main>
 
     <footer class="text-center py-6 text-white">
-      <p class="text-lg">🎯 开始你的 Vue3 + TypeScript + Tailwind CSS + SCSS 学习之旅吧！</p>
+      <p class="text-lg">🎯 开始你的 Vue3 + TypeScript + Tailwind CSS + SCSS + TSX 学习之旅吧！</p>
     </footer>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
+import TsxDemo from './components/TsxDemo'
 
 // 定义接口
 interface Todo {
