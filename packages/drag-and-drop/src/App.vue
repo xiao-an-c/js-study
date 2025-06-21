@@ -1,269 +1,226 @@
 <template>
   <div id="app">
-    <header class="header">
-      <img src="/vite.svg" class="logo" alt="Vite logo" />
-      <h1>{{ title }}</h1>
-      <p class="subtitle">Vue3 + Vite + TypeScript 学习示例</p>
-    </header>
-
-    <main class="main">
-      <section class="demo-section">
-        <h2>响应式数据示例</h2>
-        <div class="counter-demo">
-          <p>计数器: <span class="count">{{ count }}</span></p>
-          <button @click="increment" class="btn btn-primary">点击 +1</button>
-          <button @click="decrement" class="btn btn-secondary">点击 -1</button>
-          <button @click="reset" class="btn btn-outline">重置</button>
-        </div>
-      </section>
-
-      <section class="demo-section">
-        <h2>表单绑定示例</h2>
-        <div class="form-demo">
-          <input 
-            v-model="message" 
-            type="text" 
-            placeholder="输入一些文字..."
-            class="input"
-          />
-          <p>你输入的内容: <span class="message">{{ message || '暂无内容' }}</span></p>
-        </div>
-      </section>
-
-      <section class="demo-section">
-        <h2>列表渲染示例</h2>
-        <div class="list-demo">
-          <ul class="todo-list">
-            <li v-for="(item, index) in todos" :key="item.id" class="todo-item">
-              <span :class="{ completed: item.completed }">{{ item.text }}</span>
-              <button @click="toggleTodo(index)" class="btn btn-sm">
-                {{ item.completed ? '撤销' : '完成' }}
-              </button>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <section class="demo-section">
-        <h2>计算属性示例</h2>
-        <div class="computed-demo">
-          <p>已完成任务: {{ completedCount }} / {{ todos.length }}</p>
-          <div class="progress-bar">
-            <div 
-              class="progress-fill" 
-              :style="{ width: progressPercentage + '%' }"
-            ></div>
-          </div>
-        </div>
-      </section>
-    </main>
-
-    <footer class="footer">
-      <p>🎯 开始你的 Vue3 + TypeScript 学习之旅吧！</p>
-    </footer>
+    <div class="left">
+      <div 
+        class="item" 
+        :class="{ dragging: draggedItem === '你好' }"
+        :draggable="true" 
+        @dragstart="handleDragStart($event, { type: 'text', payload: '你好' })"
+        @dragend="handleDragEnd"
+      >
+        文本：你好
+      </div>
+      <div 
+        class="item" 
+        :class="{ dragging: draggedItem === '天气好' }"
+        :draggable="true" 
+        @dragstart="handleDragStart($event, { type: 'text', payload: '天气好' })"
+        @dragend="handleDragEnd"
+      >
+        文本：天气好
+      </div>
+      <div 
+        class="item" 
+        :class="{ dragging: draggedItem === 'component' }"
+        :draggable="true" 
+        @dragstart="handleDragStart($event, { type: 'component', payload: { name: 'Button', props: { text: '按钮' } } })"
+        @dragend="handleDragEnd"
+      >
+        组件：按钮
+      </div>
+    </div>
+    <div 
+      class="right drop-zone" 
+      :class="{ 'drag-over': isDragOver }"
+      @drop="handleDrop" 
+      @dragover="handleDragOver"
+      @dragenter="handleDragEnter"
+      @dragleave="handleDragLeave"
+    >
+      <div v-if="!droppedData">拖拽内容到这里</div>
+      <div v-else>
+        <h3>拖拽的数据：</h3>
+        <p><strong>类型：</strong>{{ droppedData.type }}</p>
+        <p><strong>内容：</strong></p>
+        <pre>{{ JSON.stringify(droppedData.payload, null, 2) }}</pre>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref } from 'vue'
 
-// 定义接口
-interface Todo {
-  id: number
-  text: string
-  completed: boolean
+// 定义拖拽数据的类型
+interface DragData {
+  type: 'text' | 'component' | 'image'
+  payload: any
 }
 
-// 响应式数据
-const title = ref('drag-and-drop')
-const count = ref(0)
-const message = ref('')
-const todos = ref<Todo[]>([
-  { id: 1, text: '学习 Vue3 Composition API', completed: false },
-  { id: 2, text: '掌握 TypeScript 基础语法', completed: false },
-  { id: 3, text: '了解 Vite 构建工具', completed: true },
-  { id: 4, text: '创建第一个 Vue3 项目', completed: true }
-])
+const droppedData = ref<DragData | null>(null)
+const isDragOver = ref(false)
+const draggedItem = ref<string | null>(null)
 
-// 方法
-const increment = () => {
-  count.value++
+// 类型安全的数据传输辅助函数
+const setDragData = (dataTransfer: DataTransfer, data: DragData) => {
+  dataTransfer.setData('application/json', JSON.stringify(data))
 }
 
-const decrement = () => {
-  count.value--
+const getDragData = (dataTransfer: DataTransfer): DragData | null => {
+  try {
+    const jsonString = dataTransfer.getData('application/json')
+    return jsonString ? JSON.parse(jsonString) : null
+  } catch {
+    return null
+  }
 }
 
-const reset = () => {
-  count.value = 0
+// 拖拽开始事件处理
+const handleDragStart = (e: DragEvent, data: DragData) => {
+  console.log('handleDragStart')
+  if (!e.dataTransfer) return
+  
+  // 设置传输数据
+  setDragData(e.dataTransfer, data)
+  e.dataTransfer.effectAllowed = 'copy'
+  
+  // 设置拖拽时的视觉反馈
+  draggedItem.value = typeof data.payload === 'string' ? data.payload : data.type
+  
+  // 可选：设置拖拽时的图像
+  if (e.target instanceof Element) {
+    e.dataTransfer.setDragImage(e.target, 0, 0)
+  }
 }
 
-const toggleTodo = (index: number) => {
-  todos.value[index].completed = !todos.value[index].completed
+// 拖拽结束事件处理
+const handleDragEnd = () => {
+  console.log('handleDragEnd')
+
+  draggedItem.value = null
 }
 
-// 计算属性
-const completedCount = computed(() => {
-  return todos.value.filter(todo => todo.completed).length
-})
+// 拖拽进入放置区域
+const handleDragEnter = (e: DragEvent) => {
+  console.log('handleDragEnter')
 
-const progressPercentage = computed(() => {
-  return todos.value.length > 0 ? (completedCount.value / todos.value.length) * 100 : 0
-})
+  e.preventDefault()
+  isDragOver.value = true
+}
+
+// 拖拽在放置区域上方
+const handleDragOver = (e: DragEvent) => {
+  console.log('handleDragOver')
+
+  e.preventDefault()
+  if (e.dataTransfer) {
+    e.dataTransfer.dropEffect = 'copy'
+  }
+}
+
+// 拖拽离开放置区域
+const handleDragLeave = (e: DragEvent) => {
+  console.log('handleDragLeave')
+  // 检查是否真的离开了放置区域（避免子元素触发）
+  if (e.target === e.currentTarget) {
+    isDragOver.value = false
+  }
+}
+
+// 放置事件处理
+const handleDrop = (e: DragEvent) => {
+  console.log('handleDrop')
+  e.preventDefault()
+  isDragOver.value = false
+  
+  if (!e.dataTransfer) return
+  
+  const data = getDragData(e.dataTransfer)
+  if (data) {
+    droppedData.value = data
+    console.log('拖拽数据:', data)
+  } else {
+    console.error('无效的拖拽数据')
+  }
+}
 </script>
 
 <style scoped>
-.header {
-  text-align: center;
-  padding: 2rem 0;
-  border-bottom: 1px solid #eee;
-}
-
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-
-.subtitle {
-  color: #666;
-  margin-top: 0.5rem;
-}
-
-.main {
-  max-width: 800px;
-  margin: 0 auto;
-  padding: 2rem;
-}
-
-.demo-section {
-  margin-bottom: 3rem;
-  padding: 1.5rem;
-  border: 1px solid #e1e5e9;
-  border-radius: 8px;
-  background: #fafafa;
-}
-
-.demo-section h2 {
-  margin-top: 0;
-  color: #2c3e50;
-  border-bottom: 2px solid #3498db;
-  padding-bottom: 0.5rem;
-}
-
-.counter-demo {
-  text-align: center;
-}
-
-.count {
-  font-size: 2rem;
-  font-weight: bold;
-  color: #3498db;
-}
-
-.btn {
-  padding: 0.5rem 1rem;
-  margin: 0 0.25rem;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 0.9rem;
-  transition: all 0.3s;
-}
-
-.btn-primary {
-  background: #3498db;
-  color: white;
-}
-
-.btn-primary:hover {
-  background: #2980b9;
-}
-
-.btn-secondary {
-  background: #95a5a6;
-  color: white;
-}
-
-.btn-secondary:hover {
-  background: #7f8c8d;
-}
-
-.btn-outline {
-  background: transparent;
-  color: #3498db;
-  border: 1px solid #3498db;
-}
-
-.btn-outline:hover {
-  background: #3498db;
-  color: white;
-}
-
-.btn-sm {
-  padding: 0.25rem 0.5rem;
-  font-size: 0.8rem;
-}
-
-.input {
-  padding: 0.5rem;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 1rem;
-  width: 300px;
-  margin-right: 1rem;
-}
-
-.message {
-  font-weight: bold;
-  color: #27ae60;
-}
-
-.todo-list {
-  list-style: none;
-  padding: 0;
-}
-
-.todo-item {
+#app {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0.75rem;
-  margin-bottom: 0.5rem;
-  background: white;
-  border-radius: 4px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  flex-direction: row;
+  gap: 5px;
+  height: 400px;
+  padding: 5px;
 }
 
-.completed {
-  text-decoration: line-through;
-  color: #7f8c8d;
-}
-
-.progress-bar {
-  width: 100%;
-  height: 20px;
-  background: #ecf0f1;
-  border-radius: 10px;
-  overflow: hidden;
-  margin-top: 1rem;
-}
-
-.progress-fill {
+.left,
+.right {
   height: 100%;
-  background: linear-gradient(90deg, #3498db, #2ecc71);
-  transition: width 0.3s ease;
+  border-radius: 5px;
+  padding: 5px;
+
+  border: 1px solid #dcdcdc;
+
+  box-sizing: border-box;
 }
 
-.footer {
+.left {
+  display: flex;
+  flex-direction: column;
+  width: 180px;
+  gap: 3px;
+}
+
+.right {
+  flex: 1;
+}
+
+.item {
+  cursor: pointer;
+  background: #f5f5f5;
+  border: 1px solid #dcdcdc;
+  border-radius: 5px;
+  padding: 5px;
+  font-size: 14px;
+  transition: all 0.3s ease;
+  user-select: none;
+}
+
+.item:hover {
+  background: #e9ecef;
+  border-color: #007bff;
+}
+
+/* 拖拽时的样式 */
+.item.dragging {
+  opacity: 0.5;
+  transform: rotate(2deg);
+}
+
+/* 放置目标的样式 */
+.drop-zone {
+  border: 2px dashed #ccc;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   text-align: center;
-  padding: 2rem;
-  color: #7f8c8d;
-  border-top: 1px solid #eee;
+}
+
+.drop-zone.drag-over {
+  border-color: #007bff;
+  background-color: #f8f9fa;
+}
+
+.drop-zone pre {
+  background: #f8f9fa;
+  padding: 10px;
+  border-radius: 4px;
+  border: 1px solid #e9ecef;
+  text-align: left;
+  font-size: 12px;
+  max-width: 100%;
+  overflow-x: auto;
 }
 </style>
