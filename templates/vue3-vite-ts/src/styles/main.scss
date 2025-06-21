@@ -1,7 +1,9 @@
+@use 'sass:color';
+@use 'variables' as *;
+@use 'mixins' as *;
+
 // 主要 SCSS 样式文件
-// 导入变量和 mixins
-@import 'variables';
-@import 'mixins';
+// 导入变量和 mixins (使用现代 @use 语法)
 
 // 全局样式重置和基础样式
 * {
@@ -53,7 +55,7 @@ a {
   transition: color $transition-fast;
 
   &:hover {
-    color: darken($primary-color, 15%);
+    color: color.adjust($primary-color, $lightness: -15%);
     text-decoration: underline;
   }
 

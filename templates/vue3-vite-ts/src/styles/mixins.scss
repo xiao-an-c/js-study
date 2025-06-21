@@ -1,3 +1,6 @@
+@use 'sass:color';
+@use 'variables' as *;
+
 // SCSS Mixins 文件
 // 定义项目中常用的样式混合器
 
@@ -97,7 +100,7 @@
   }
 }
 
-@mixin button-variant($bg-color, $text-color: white, $hover-bg: darken($bg-color, 10%)) {
+@mixin button-variant($bg-color, $text-color: white, $hover-bg: color.adjust($bg-color, $lightness: -10%)) {
   background-color: $bg-color;
   color: $text-color;
   border-color: $bg-color;
@@ -108,8 +111,8 @@
   }
 
   &:active {
-    background-color: darken($bg-color, 15%);
-    border-color: darken($bg-color, 15%);
+    background-color: color.adjust($bg-color, $lightness: -15%);
+    border-color: color.adjust($bg-color, $lightness: -15%);
   }
 }
 
