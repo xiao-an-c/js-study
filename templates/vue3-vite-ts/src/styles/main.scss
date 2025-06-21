@@ -1,0 +1,283 @@
+// 主要 SCSS 样式文件
+// 导入变量和 mixins
+@import 'variables';
+@import 'mixins';
+
+// 全局样式重置和基础样式
+* {
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: $font-family-base;
+  font-size: $font-size-base;
+  font-weight: $font-weight-normal;
+  color: $gray-900;
+  background-color: $light-color;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+// 标题样式
+h1, h2, h3, h4, h5, h6 {
+  margin: 0 0 $spacing-md 0;
+  font-weight: $font-weight-semibold;
+  line-height: 1.2;
+  color: $gray-800;
+}
+
+h1 { font-size: $font-size-4xl; }
+h2 { font-size: $font-size-3xl; }
+h3 { font-size: $font-size-2xl; }
+h4 { font-size: $font-size-xl; }
+h5 { font-size: $font-size-lg; }
+h6 { font-size: $font-size-base; }
+
+// 段落样式
+p {
+  margin: 0 0 $spacing-md 0;
+  line-height: 1.6;
+}
+
+// 链接样式
+a {
+  color: $primary-color;
+  text-decoration: none;
+  transition: color $transition-fast;
+
+  &:hover {
+    color: darken($primary-color, 15%);
+    text-decoration: underline;
+  }
+
+  &:focus {
+    outline: 2px solid $primary-color;
+    outline-offset: 2px;
+  }
+}
+
+// 按钮组件样式
+.btn {
+  @include button-base;
+
+  &--primary {
+    @include button-variant($primary-color);
+  }
+
+  &--secondary {
+    @include button-variant($secondary-color);
+  }
+
+  &--danger {
+    @include button-variant($danger-color);
+  }
+
+  &--outline {
+    @include button-outline($primary-color);
+  }
+
+  &--sm {
+    padding: $spacing-xs $spacing-sm;
+    font-size: $font-size-sm;
+  }
+
+  &--lg {
+    padding: $spacing-md $spacing-lg;
+    font-size: $font-size-lg;
+  }
+}
+
+// 输入框组件样式
+.input {
+  @include input-base;
+
+  &--error {
+    border-color: $danger-color;
+    
+    &:focus {
+      border-color: $danger-color;
+      box-shadow: 0 0 0 3px rgba($danger-color, 0.1);
+    }
+  }
+
+  &--success {
+    border-color: $success-color;
+    
+    &:focus {
+      border-color: $success-color;
+      box-shadow: 0 0 0 3px rgba($success-color, 0.1);
+    }
+  }
+}
+
+// 卡片组件样式
+.card {
+  @include card;
+
+  &__header {
+    margin-bottom: $spacing-md;
+    padding-bottom: $spacing-md;
+    border-bottom: 1px solid $gray-200;
+  }
+
+  &__title {
+    margin: 0;
+    font-size: $font-size-xl;
+    font-weight: $font-weight-semibold;
+    color: $gray-800;
+  }
+
+  &__content {
+    color: $gray-700;
+  }
+
+  &__footer {
+    margin-top: $spacing-md;
+    padding-top: $spacing-md;
+    border-top: 1px solid $gray-200;
+    @include flex-between;
+  }
+}
+
+// 工具类
+.text {
+  &-center { text-align: center; }
+  &-left { text-align: left; }
+  &-right { text-align: right; }
+  &-ellipsis { @include text-ellipsis; }
+}
+
+.flex {
+  &-center { @include flex-center; }
+  &-between { @include flex-between; }
+  &-column { @include flex-column; }
+  &-column-center { @include flex-column-center; }
+}
+
+.m {
+  &-0 { margin: 0; }
+  &-1 { margin: $spacing-xs; }
+  &-2 { margin: $spacing-sm; }
+  &-3 { margin: $spacing-md; }
+  &-4 { margin: $spacing-lg; }
+  &-5 { margin: $spacing-xl; }
+}
+
+.p {
+  &-0 { padding: 0; }
+  &-1 { padding: $spacing-xs; }
+  &-2 { padding: $spacing-sm; }
+  &-3 { padding: $spacing-md; }
+  &-4 { padding: $spacing-lg; }
+  &-5 { padding: $spacing-xl; }
+}
+
+// 动画定义
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes bounceIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+  70% {
+    transform: scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+// 动画工具类
+.animate {
+  &-fade-in { @include fade-in; }
+  &-slide-up { @include slide-up; }
+  &-bounce-in { @include bounce-in; }
+  &-pulse { animation: pulse 2s infinite; }
+  &-spin { animation: spin 1s linear infinite; }
+}
+
+// 响应式工具类
+.hidden {
+  &-sm {
+    @include respond-to(sm) {
+      display: none;
+    }
+  }
+  &-md {
+    @include respond-to(md) {
+      display: none;
+    }
+  }
+  &-lg {
+    @include respond-to(lg) {
+      display: none;
+    }
+  }
+}
+
+.block {
+  &-sm {
+    @include respond-to(sm) {
+      display: block;
+    }
+  }
+  &-md {
+    @include respond-to(md) {
+      display: block;
+    }
+  }
+  &-lg {
+    @include respond-to(lg) {
+      display: block;
+    }
+  }
+}

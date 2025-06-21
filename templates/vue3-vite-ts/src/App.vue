@@ -1,42 +1,44 @@
 <template>
-  <div id="app">
-    <header class="header">
-      <img src="/vite.svg" class="logo" alt="Vite logo" />
-      <h1>{{ title }}</h1>
-      <p class="subtitle">Vue3 + Vite + TypeScript 学习示例</p>
+  <div id="app" class="min-h-screen bg-gradient-to-br from-blue-500 to-purple-600">
+    <header class="text-center py-8 text-white">
+      <img src="/vite.svg" class="w-16 h-16 mx-auto mb-4" alt="Vite logo" />
+      <h1 class="text-4xl font-bold mb-2">{{ title }}</h1>
+      <p class="text-xl opacity-90">Vue3 + Vite + TypeScript + Tailwind CSS 学习示例</p>
     </header>
 
-    <main class="main">
-      <section class="demo-section">
-        <h2>响应式数据示例</h2>
-        <div class="counter-demo">
-          <p>计数器: <span class="count">{{ count }}</span></p>
-          <button @click="increment" class="btn btn-primary">点击 +1</button>
-          <button @click="decrement" class="btn btn-secondary">点击 -1</button>
-          <button @click="reset" class="btn btn-outline">重置</button>
+    <main class="max-w-4xl mx-auto px-4 pb-8">
+      <section class="bg-white rounded-lg shadow-lg p-6 mb-6">
+        <h2 class="text-2xl font-semibold mb-4 text-gray-800">响应式数据示例</h2>
+        <div class="space-y-4">
+          <p class="text-lg">计数器: <span class="font-bold text-blue-600 text-xl">{{ count }}</span></p>
+          <div class="space-x-2">
+            <button @click="increment" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md transition-colors">点击 +1</button>
+            <button @click="decrement" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md transition-colors">点击 -1</button>
+            <button @click="reset" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-md transition-colors">重置</button>
+          </div>
         </div>
       </section>
 
-      <section class="demo-section">
-        <h2>表单绑定示例</h2>
-        <div class="form-demo">
+      <section class="bg-white rounded-lg shadow-lg p-6 mb-6">
+        <h2 class="text-2xl font-semibold mb-4 text-gray-800">表单绑定示例</h2>
+        <div class="space-y-4">
           <input 
             v-model="message" 
             type="text" 
             placeholder="输入一些文字..."
-            class="input"
+            class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
-          <p>你输入的内容: <span class="message">{{ message || '暂无内容' }}</span></p>
+          <p class="text-lg">你输入的内容: <span class="font-medium text-green-600">{{ message || '暂无内容' }}</span></p>
         </div>
       </section>
 
-      <section class="demo-section">
-        <h2>列表渲染示例</h2>
-        <div class="list-demo">
-          <ul class="todo-list">
-            <li v-for="(item, index) in todos" :key="item.id" class="todo-item">
-              <span :class="{ completed: item.completed }">{{ item.text }}</span>
-              <button @click="toggleTodo(index)" class="btn btn-sm">
+      <section class="bg-white rounded-lg shadow-lg p-6 mb-6">
+        <h2 class="text-2xl font-semibold mb-4 text-gray-800">列表渲染示例</h2>
+        <div>
+          <ul class="space-y-2">
+            <li v-for="(item, index) in todos" :key="item.id" class="flex items-center justify-between p-3 bg-gray-50 rounded-md">
+              <span :class="{ 'line-through text-gray-500': item.completed, 'text-gray-800': !item.completed }">{{ item.text }}</span>
+              <button @click="toggleTodo(index)" class="px-3 py-1 text-sm rounded-md transition-colors" :class="item.completed ? 'bg-yellow-500 hover:bg-yellow-600 text-white' : 'bg-green-500 hover:bg-green-600 text-white'">
                 {{ item.completed ? '撤销' : '完成' }}
               </button>
             </li>
@@ -44,13 +46,13 @@
         </div>
       </section>
 
-      <section class="demo-section">
-        <h2>计算属性示例</h2>
-        <div class="computed-demo">
-          <p>已完成任务: {{ completedCount }} / {{ todos.length }}</p>
-          <div class="progress-bar">
+      <section class="bg-white rounded-lg shadow-lg p-6 mb-6">
+        <h2 class="text-2xl font-semibold mb-4 text-gray-800">计算属性示例</h2>
+        <div>
+          <p class="text-lg">已完成任务: <span class="font-bold text-purple-600">{{ completedCount }}</span> / <span class="font-bold text-gray-600">{{ todos.length }}</span></p>
+          <div class="w-full bg-gray-200 rounded-full h-3 mt-2">
             <div 
-              class="progress-fill" 
+              class="bg-gradient-to-r from-purple-500 to-blue-500 h-3 rounded-full transition-all duration-300 ease-out" 
               :style="{ width: progressPercentage + '%' }"
             ></div>
           </div>
@@ -58,8 +60,8 @@
       </section>
     </main>
 
-    <footer class="footer">
-      <p>🎯 开始你的 Vue3 + TypeScript 学习之旅吧！</p>
+    <footer class="text-center py-6 text-white">
+      <p class="text-lg">🎯 开始你的 Vue3 + TypeScript + Tailwind CSS + SCSS 学习之旅吧！</p>
     </footer>
   </div>
 </template>
@@ -113,157 +115,5 @@ const progressPercentage = computed(() => {
 </script>
 
 <style scoped>
-.header {
-  text-align: center;
-  padding: 2rem 0;
-  border-bottom: 1px solid #eee;
-}
-
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-
-.subtitle {
-  color: #666;
-  margin-top: 0.5rem;
-}
-
-.main {
-  max-width: 800px;
-  margin: 0 auto;
-  padding: 2rem;
-}
-
-.demo-section {
-  margin-bottom: 3rem;
-  padding: 1.5rem;
-  border: 1px solid #e1e5e9;
-  border-radius: 8px;
-  background: #fafafa;
-}
-
-.demo-section h2 {
-  margin-top: 0;
-  color: #2c3e50;
-  border-bottom: 2px solid #3498db;
-  padding-bottom: 0.5rem;
-}
-
-.counter-demo {
-  text-align: center;
-}
-
-.count {
-  font-size: 2rem;
-  font-weight: bold;
-  color: #3498db;
-}
-
-.btn {
-  padding: 0.5rem 1rem;
-  margin: 0 0.25rem;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 0.9rem;
-  transition: all 0.3s;
-}
-
-.btn-primary {
-  background: #3498db;
-  color: white;
-}
-
-.btn-primary:hover {
-  background: #2980b9;
-}
-
-.btn-secondary {
-  background: #95a5a6;
-  color: white;
-}
-
-.btn-secondary:hover {
-  background: #7f8c8d;
-}
-
-.btn-outline {
-  background: transparent;
-  color: #3498db;
-  border: 1px solid #3498db;
-}
-
-.btn-outline:hover {
-  background: #3498db;
-  color: white;
-}
-
-.btn-sm {
-  padding: 0.25rem 0.5rem;
-  font-size: 0.8rem;
-}
-
-.input {
-  padding: 0.5rem;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 1rem;
-  width: 300px;
-  margin-right: 1rem;
-}
-
-.message {
-  font-weight: bold;
-  color: #27ae60;
-}
-
-.todo-list {
-  list-style: none;
-  padding: 0;
-}
-
-.todo-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0.75rem;
-  margin-bottom: 0.5rem;
-  background: white;
-  border-radius: 4px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-}
-
-.completed {
-  text-decoration: line-through;
-  color: #7f8c8d;
-}
-
-.progress-bar {
-  width: 100%;
-  height: 20px;
-  background: #ecf0f1;
-  border-radius: 10px;
-  overflow: hidden;
-  margin-top: 1rem;
-}
-
-.progress-fill {
-  height: 100%;
-  background: linear-gradient(90deg, #3498db, #2ecc71);
-  transition: width 0.3s ease;
-}
-
-.footer {
-  text-align: center;
-  padding: 2rem;
-  color: #7f8c8d;
-  border-top: 1px solid #eee;
-}
+/* Tailwind CSS 已经提供了所有需要的样式 */
 </style>
