@@ -3,5 +3,5 @@
 </template>
 
 <script setup lang="ts">
-import { Editor } from '@/eidtor'
+import { Editor } from '@/editor'
 </script>
