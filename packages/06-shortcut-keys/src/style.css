@@ -38,7 +38,7 @@ body {
   text-align: center;
   background: white;
   color: #2c3e50;
-  min-height: 100vh;
+  height: 100vh;
   box-shadow: 0 0 20px rgba(0,0,0,0.1);
 }
 
@@ -66,16 +66,16 @@ p {
   .main {
     padding: 1rem;
   }
-  
+
   .demo-section {
     padding: 1rem;
   }
-  
+
   .input {
     width: 100%;
     margin-bottom: 1rem;
   }
-  
+
   .btn {
     margin: 0.25rem;
     display: inline-block;

@@ -51,14 +51,6 @@
 
       <!-- 中间：可视化画布 -->
       <div class="editor-canvas">
-        <div class="canvas-header">
-          <h3>可视化画布</h3>
-          <div class="canvas-info">
-            <span>选中: {{ selectedNodeId || '无' }}</span>
-            <span>历史: {{ historyHook.historyState.value.currentIndex + 1 }} / {{ historyHook.historyState.value.historyLength }}</span>
-          </div>
-        </div>
-
         <div class="canvas-content" @click="handleCanvasClick">
           <DropContainer
             :node="rootNode"
@@ -92,55 +84,7 @@
       </div>
     </div>
 
-    <!-- 工具栏 -->
-    <div class="editor-toolbar">
-      <div class="toolbar-section">
-        <button
-          class="toolbar-btn toolbar-btn--danger"
-          @click="removeSelectedNode"
-          :disabled="!selectedNodeId || selectedNodeId === 'root-1'"
-        >
-          <svg class="icon" viewBox="0 0 24 24">
-            <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
-          </svg>
-          删除选中
-        </button>
-      </div>
 
-      <div class="toolbar-divider"></div>
-
-      <div class="toolbar-section">
-        <button
-          class="toolbar-btn toolbar-btn--undo"
-          @click="historyHook.undo"
-          :disabled="!historyHook.canUndo.value"
-          :title="`撤销: ${historyHook.currentCommand.value || '无操作'}`"
-        >
-          <svg class="icon" viewBox="0 0 24 24">
-            <path d="M12.5 8c-2.65 0-5.05.99-6.9 2.6L2 7v9h9l-3.62-3.62c1.39-1.16 3.16-1.88 5.12-1.88 3.54 0 6.55 2.31 7.6 5.5l2.37-.78C21.08 11.03 17.15 8 12.5 8z"/>
-          </svg>
-          撤销
-        </button>
-
-        <button
-          class="toolbar-btn toolbar-btn--redo"
-          @click="historyHook.redo"
-          :disabled="!historyHook.canRedo.value"
-          :title="`重做: ${historyHook.nextCommand.value || '无操作'}`"
-        >
-          <svg class="icon" viewBox="0 0 24 24">
-            <path d="M18.4 10.6C16.55 8.99 14.15 8 11.5 8c-4.65 0-8.58 3.03-9.96 7.22L3.9 16c1.05-3.19 4.05-5.5 7.6-5.5 1.95 0 3.73.72 5.12 1.88L13 16h9V7l-3.6 3.6z"/>
-          </svg>
-          重做
-        </button>
-      </div>
-
-      <div class="toolbar-divider"></div>
-
-      <div class="toolbar-section">
-        <span class="toolbar-info">快捷键: Ctrl+Z(撤销) Ctrl+Y/Ctrl+Shift+Z(重做)</span>
-      </div>
-    </div>
   </div>
 </template>
 
@@ -150,11 +94,13 @@ import type { ComponentNode } from '../editor/types'
 import { useHistory } from '../editor/hooks'
 import { ButtonDefine, FlexDefine } from '../libs'
 import { NodeService, HistoryManager } from '../editor/services'
+import { useShortcuts } from '@/shortcuts'
 
 // 导入组件
 import { CanvasRender, DropContainer, HistoryPanel, PropsEditor } from '../editor'
 import ComponentTreeNode from './ComponentTreeNode.vue'
 import LibsPanel from '@/editor/components/LibsPanel.vue'
+
 
 // 初始化根节点
 const rootNode = ref<ComponentNode>({
@@ -219,22 +165,119 @@ const removeSelectedNode = () => {
   }
 }
 
-// 键盘快捷键
+// 暴露给父组件的属性和方法
+defineExpose({
+  selectedNodeId,
+  historyHook,
+  removeSelectedNode
+})
+
+// 初始化快捷键
+const { register, startListening, stopListening } = useShortcuts({
+  // 配置在可编辑元素中允许的快捷键
+  allowInEditableElements: [
+    'editor-undo',      // 撤销
+    'editor-redo-y',    // 重做 (Cmd+Y)
+    'editor-redo-z',    // 重做 (Cmd+Shift+Z)
+    'editor-escape'     // 取消选择
+  ]
+})
+
+// 注册编辑器快捷键
+const registerEditorShortcuts = () => {
+  // 撤销
+  register({
+    id: 'editor-undo',
+    name: '撤销',
+    description: '撤销上一步操作',
+    key: 'z',
+    modifiers: { ctrl: false, alt: false, shift: false, meta: true },
+    action: 'undo',
+    enabled: true,
+  }, () => {
+    if (historyHook.canUndo.value) {
+      historyHook.undo()
+    }
+  })
+
+  // 重做 (Ctrl+Y)
+  register({
+    id: 'editor-redo-y',
+    name: '重做',
+    description: '重做下一步操作',
+    key: 'y',
+    modifiers: { ctrl: false, alt: false, shift: false, meta: true },
+    action: 'redo',
+    enabled: true,
+  }, () => {
+    if (historyHook.canRedo.value) {
+      historyHook.redo()
+    }
+  })
+
+  // 重做 (Ctrl+Shift+Z)
+  register({
+    id: 'editor-redo-z',
+    name: '重做',
+    description: '重做下一步操作',
+    key: 'z',
+    modifiers: { ctrl: true, alt: false, shift: true, meta: false },
+    action: 'redo',
+    enabled: true,
+  }, () => {
+    if (historyHook.canRedo.value) {
+      historyHook.redo()
+      }
+  })
+
+  // 删除选中节点
+  register({
+    id: 'editor-delete',
+    name: '删除选中',
+    description: '删除当前选中的节点',
+    key: 'backspace',
+    modifiers: { ctrl: false, alt: false, shift: false, meta: false },
+    action: 'custom',
+    enabled: true,
+  }, () => {
+    if (selectedNodeId.value && selectedNodeId.value !== 'root-1') {
+      removeSelectedNode()
+    }
+  })
+
+  // 取消选择
+  register({
+    id: 'editor-escape',
+    name: '取消选择',
+    description: '取消当前选择',
+    key: 'Escape',
+    modifiers: { ctrl: false, alt: false, shift: false, meta: false },
+    action: 'escape',
+    enabled: true,
+  }, () => {
+    selectedNodeId.value = null
+  })
+}
+
+// 生命周期
 onMounted(() => {
-  document.addEventListener('keydown', historyHook.handleKeyboardShortcuts)
+  registerEditorShortcuts()
+  startListening()
 })
 
 onUnmounted(() => {
-  document.removeEventListener('keydown', historyHook.handleKeyboardShortcuts)
+  stopListening()
 })
+
+
 </script>
 
 <style scoped>
 .history-editor {
-  height: 100vh;
   background: #f8fafc;
   display: flex;
   flex-direction: column;
+  flex:1;
 }
 
 .editor-content {
@@ -363,28 +406,7 @@ onUnmounted(() => {
   flex-direction: column;
 }
 
-.canvas-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 16px 20px;
-  background: #f8fafc;
-  border-bottom: 1px solid #e5e7eb;
-}
 
-.canvas-header h3 {
-  margin: 0;
-  font-size: 16px;
-  font-weight: 600;
-  color: #374151;
-}
-
-.canvas-info {
-  display: flex;
-  gap: 16px;
-  font-size: 12px;
-  color: #6b7280;
-}
 
 .canvas-content {
   flex: 1;
@@ -437,101 +459,7 @@ onUnmounted(() => {
   font-size: 14px;
 }
 
-.editor-toolbar {
-  background: white;
-  border-top: 1px solid #e5e7eb;
-  padding: 12px 20px;
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
-}
 
-.toolbar-section {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.toolbar-btn {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 12px;
-  border: none;
-  border-radius: 6px;
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.toolbar-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.toolbar-btn--primary {
-  background: #3b82f6;
-  color: white;
-}
-
-.toolbar-btn--primary:hover:not(:disabled) {
-  background: #2563eb;
-}
-
-.toolbar-btn--secondary {
-  background: #6b7280;
-  color: white;
-}
-
-.toolbar-btn--secondary:hover:not(:disabled) {
-  background: #4b5563;
-}
-
-.toolbar-btn--danger {
-  background: #ef4444;
-  color: white;
-}
-
-.toolbar-btn--danger:hover:not(:disabled) {
-  background: #dc2626;
-}
-
-.toolbar-btn--undo {
-  background: #f59e0b;
-  color: white;
-}
-
-.toolbar-btn--undo:hover:not(:disabled) {
-  background: #d97706;
-}
-
-.toolbar-btn--redo {
-  background: #10b981;
-  color: white;
-}
-
-.toolbar-btn--redo:hover:not(:disabled) {
-  background: #059669;
-}
-
-.toolbar-divider {
-  width: 1px;
-  height: 24px;
-  background: #e5e7eb;
-}
-
-.toolbar-info {
-  font-size: 12px;
-  color: #6b7280;
-}
-
-.icon {
-  width: 14px;
-  height: 14px;
-  fill: currentColor;
-}
 
 @media (max-width: 1200px) {
   .editor-content {
