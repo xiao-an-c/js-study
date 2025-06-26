@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import type { ComponentNode } from '../types'
-import { useEditorState, useNodeOperations } from '../hooks'
+import { useEditorState, useNodeOperations, useHistory } from '../hooks'
 import { ButtonDefine, FlexDefine } from '@/libs'
 
 // 导入组件
@@ -9,6 +9,7 @@ import CanvasRender from './CanvasRender'
 import DropContainer from './DropContainer.vue'
 import LibsPanel from './LibsPanel.vue'
 import PropsEditor from './PropsEditor.vue'
+import HistoryPanel from './HistoryPanel.vue'
 
 // 初始化根节点数据
 const rootNode = ref<ComponentNode>({
@@ -37,6 +38,9 @@ const {
   updateNodeProps
 } = useNodeOperations(rootNode.value)
 
+// 使用历史记录管理
+const historyHook = useHistory(rootNode.value)
+
 /**
  * 处理测试事件
  * @param msg 消息
@@ -54,12 +58,12 @@ const handleNodeSelect = (nodeId: string | null) => {
 }
 
 /**
- * 处理属性更新事件
+ * 处理属性更新事件（带历史记录）
  * @param nodeId 节点ID
  * @param newProps 新属性
  */
 const handleUpdateProps = (nodeId: string, newProps: Record<string, any>) => {
-  const success = updateNodeProps(nodeId, newProps)
+  const success = historyHook.updateNodePropsWithHistory(nodeId, newProps)
   if (!success) {
     console.warn('[Editor] 更新节点属性失败:', nodeId, newProps)
   }
@@ -71,6 +75,15 @@ const handleUpdateProps = (nodeId: string, newProps: Record<string, any>) => {
 const handleCanvasClick = () => {
   selectNode(null)
 }
+
+// 键盘快捷键支持
+onMounted(() => {
+  document.addEventListener('keydown', historyHook.handleKeyboardShortcuts)
+})
+
+onUnmounted(() => {
+  document.removeEventListener('keydown', historyHook.handleKeyboardShortcuts)
+})
 </script>
 
 <template>
@@ -97,10 +110,20 @@ const handleCanvasClick = () => {
     
     <!-- 右侧属性编辑面板 -->
     <div class="editor__sidebar editor__sidebar--right">
-      <PropsEditor
-        :selected-node="selectedNode"
-        @update-props="handleUpdateProps"
-      />
+      <!-- 历史记录面板 -->
+      <div class="editor__history-section">
+        <h3 class="editor__section-title">历史记录</h3>
+        <HistoryPanel :history-hook="historyHook" />
+      </div>
+      
+      <!-- 属性编辑器 -->
+      <div class="editor__props-section">
+        <h3 class="editor__section-title">属性编辑</h3>
+        <PropsEditor
+          :selected-node="selectedNode"
+          @update-props="handleUpdateProps"
+        />
+      </div>
     </div>
     
     <!-- 状态指示器 -->
@@ -110,6 +133,15 @@ const handleCanvasClick = () => {
       </div>
       <div class="editor__status-item">
         拖拽状态: {{ state.isDragOver ? '拖拽中' : '正常' }}
+      </div>
+      <div class="editor__status-item">
+        历史记录: {{ historyHook.historyState.currentIndex + 1 }} / {{ historyHook.historyState.historyLength }}
+      </div>
+      <div class="editor__status-item" v-if="historyHook.currentCommand.value">
+        当前操作: {{ historyHook.currentCommand.value }}
+      </div>
+      <div class="editor__status-item">
+        快捷键: Ctrl+Z(撤销) Ctrl+Y/Ctrl+Shift+Z(重做)
       </div>
     </div>
   </div>
@@ -145,6 +177,15 @@ const handleCanvasClick = () => {
   
   &__status-item {
     @apply flex items-center gap-1;
+  }
+  
+  &__history-section,
+  &__props-section {
+    @apply mb-6;
+  }
+  
+  &__section-title {
+    @apply text-sm font-semibold text-gray-700 mb-3 px-2;
   }
 }
 

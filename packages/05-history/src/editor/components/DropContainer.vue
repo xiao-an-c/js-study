@@ -1,22 +1,20 @@
 <script setup lang="ts">
-import { provide, ref } from 'vue'
+import { provide, ref, inject } from 'vue'
 import type { ComponentNode } from '../types'
 import { DropController } from '../controllers'
-import { DragDropService } from '../services'
+import { DragDropService, HistoryManager } from '../services'
 
 interface Props {
   node: ComponentNode
 }
 
-interface Emits {
-  (e: 'test', message: string): void
-}
-
 defineProps<Props>()
-const emit = defineEmits<Emits>()
 
-// 创建并提供拖拽控制器实例
-const dropController = new DropController()
+// 注入历史管理器
+const historyManager = inject<HistoryManager>('historyManager')
+
+// 创建并提供拖拽控制器实例，传入历史管理器
+const dropController = new DropController(historyManager)
 provide('drop-controller', dropController)
 
 // 拖拽状态
@@ -29,9 +27,6 @@ const isDragOver = ref(false)
 const handleDrop = (e: DragEvent) => {
   DragDropService.preventDefault(e)
   isDragOver.value = false
-
-  // 发送测试事件
-  emit('test', '拖拽放置完成')
 }
 
 /**
